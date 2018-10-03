@@ -1,3 +1,3 @@
-/home/achsu3/queue/queue.ko
-/home/achsu3/queue/queue.o
+/home/achsu3/performfa18/queue/queue.ko
+/home/achsu3/performfa18/queue/queue.o
 

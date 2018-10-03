@@ -6,10 +6,17 @@
 #include <linux/slab.h>
 #include <linux/syscalls.h>
 
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("AMANDA");
+MODULE_DESCRIPTION("");
+MODULE_VERSION(".01");
+
+
 int len,temp,i=0,ret;
 char *empty="Queue Empty  \n";
 int emp_len,flag=1;
-
+//flag - make sure that you're only returning 1 node at a time
+//emp_len - 
 static struct k_list *node;
 struct list_head *head;
 struct list_head test_head;
@@ -27,11 +34,11 @@ struct k_list {
 ssize_t dequeue(struct file *filp,char *buf,size_t count,loff_t *offp){
   if(list_empty(head)){//make sure the list isn't empry before you try popping
     msg=empty;
-    if(flag==1) {
+    if(flag==1) {//the first time you dequeue and it's empty - return 1
       ret=emp_len;
       flag=0;
     }
-    else if(flag==0){
+    else if(flag==0){//the second time just return 0
       ret=0;
       flag=1;
     }
@@ -39,10 +46,10 @@ ssize_t dequeue(struct file *filp,char *buf,size_t count,loff_t *offp){
     printk(KERN_INFO "\nStack empty\n");
     return ret;
   }
-  if(new_node == 1) {
+  if(new_node == 1) {//you have a node to dequeue
     node=list_first_entry(head,struct k_list ,queue_list);
     msg=node->data;
-    ret=strlen(msg);
+    ret=strlen(msg);//return the data from the node
     new_node=0;
   }
   if(count>ret) {
@@ -52,8 +59,8 @@ ssize_t dequeue(struct file *filp,char *buf,size_t count,loff_t *offp){
   temp=copy_to_user(buf,msg, count);
   printk(KERN_INFO "\n data = %s \n" ,msg);
   if(count==0) {
-    list_del(&node->queue_list);
-    new_node=1;
+    list_del(&node->queue_list);//delete the node youre dequeueing
+    new_node=1;//there are more nodes to dequeue
   }
   return count;
 }
@@ -84,11 +91,13 @@ int queue_init (void) {
   head = kmalloc(sizeof(struct list_head *),GFP_KERNEL);
   INIT_LIST_HEAD(head);
   emp_len=strlen(empty);
+  printk("init queue");
   return 0;
 }
 //delete everything
 void queue_cleanup(void) {
  remove_proc_entry("queue",NULL);
+ printk("cleanin' queue");
 }
 
 module_init(queue_init);
