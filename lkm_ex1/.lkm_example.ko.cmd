@@ -1,0 +1,1 @@
+cmd_/home/achsu3/lkm_ex1/lkm_example.ko := ld -r -m elf_x86_64 -z max-page-size=0x200000 -T ./scripts/module-common.lds --build-id  -o /home/achsu3/lkm_ex1/lkm_example.ko /home/achsu3/lkm_ex1/lkm_example.o /home/achsu3/lkm_ex1/lkm_example.mod.o ;  true

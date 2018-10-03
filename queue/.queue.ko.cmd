@@ -1,0 +1,1 @@
+cmd_/home/achsu3/queue/queue.ko := ld -r -m elf_x86_64 -z max-page-size=0x200000 -T ./scripts/module-common.lds --build-id  -o /home/achsu3/queue/queue.ko /home/achsu3/queue/queue.o /home/achsu3/queue/queue.mod.o ;  true
