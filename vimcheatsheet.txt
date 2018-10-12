@@ -1,0 +1,35 @@
+Vim Cheatsheet
+
+u - undo
+. - repeat last command
+n - Next search result
+N - Next search result in opposite direction
+v - start highlighting
+V - highlight line
+y - copy (yank)
+d - delete (cut)
+dd - delete line
+D - delete to end of line
+P - paste before cursor
+p - paste after cursor
+"xy - yank into register x
+"xp - paste from register x
+:reg - show register contents
+0 - jump to the start of the line
+$ - jump to the end of the line
+^ - jump to the first non-blank character of the line
+g_ - jump to the last non-blank character of the line
+gg - jump to the first line of the document
+G - jump to the last line of the document
+w - jump forward a word
+b - jump backward a word
+>> - indent
+<< - reverse indent
+gUU - uppercase line
+guu - lowercase line
+~ - toggle case
+
+:%s/old/new/g - replace all old with new throughout file
+:%s/old/new/gc - replace all old with new throughout file with confirmations
+:tag Classname - jump to first definition of Classname
+:set number - turn on line numbers
