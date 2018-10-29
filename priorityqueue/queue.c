@@ -6,6 +6,7 @@
 #include <linux/slab.h>
 #include <linux/syscalls.h>
 #include <linux/list_sort.h>
+#include <sys/queue.h>
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("AMANDA");
@@ -16,6 +17,7 @@ MODULE_VERSION(".01");
 int len,temp,i=0,ret;
 char *empty="Queue Empty  \n";
 int emp_len,flag=1;
+//int capacity;
 //flag - make sure that you're only returning 1 node at a time
 //emp_len -
 static struct k_list *node;
@@ -35,7 +37,7 @@ struct k_list {
   struct k_list * left_;
 };
 
-//function to rebalance the tree
+//function to rebalance the tree after the head has been dequeued
 void rebalance(struct k_list head){
 
 
@@ -90,12 +92,24 @@ ssize_t enqueue(struct file *filp,const char *buf,size_t count,loff_t *offp){
   temp=copy_from_user(msg,buf,count);
   node=kmalloc(sizeof(struct k_list *),GFP_KERNEL);
   node->data=msg;
-  list_add_tail(&node->queue_list,head);
-  
+  //list_add_tail(&node->queue_list,head);
+
+  //find where you can add the new node
+  struct k_list * currroot=list_first_entry(head,struct k_list ,queue_list);
+  if(data>currroot->data){
+    //add to head;
+    list_insert_head(curroot, NULL, node);
+    goto done;
+  }
+  while(currroot->left_ || currroot->right_){
+    
+
+  }
+
   //now sort the list
-  node=list_first_entry(head,struct k_list ,queue_list);
+  //node=list_first_entry(head,struct k_list ,queue_list);
 
-
+  done:
   return count;
 }
 
