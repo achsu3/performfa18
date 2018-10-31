@@ -5,8 +5,8 @@
 #include <asm/uaccess.h>
 #include <linux/slab.h>
 #include <linux/syscalls.h>
-#include <linux/list_sort.h>
-#include <sys/queue.h>
+
+
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("AMANDA");
