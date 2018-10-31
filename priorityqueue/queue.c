@@ -6,13 +6,10 @@
 #include <linux/slab.h>
 #include <linux/syscalls.h>
 
-
-
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("AMANDA");
 MODULE_DESCRIPTION("");
 MODULE_VERSION(".01");
-
 
 int len,temp,i=0,ret;
 char *empty="Queue Empty  \n";
@@ -20,14 +17,14 @@ int emp_len,flag=1;
 //int capacity;
 //flag - make sure that you're only returning 1 node at a time
 //emp_len -
-struct k_list *node;
-struct k_list * head; //root or head or whatever
+struct k_list *node = NULL;
+struct k_list * head = NULL; //root or head or whatever
 
 int new_node=1;
-char *msg;
+char *msg = '0';
 
 //tree implementation
-struct k_list {
+struct k_list{
   //struct node head;
   char *data;//hold data
   int weight;//weight by which the list will be sorted
