@@ -151,7 +151,7 @@ void create_new_proc_entry(void){
 //initialize the queue!
 int queue_init (void) {
   create_new_proc_entry();
-  struct priority_queue pqueue = kmalloc(sizeof(struct priority_queue *),GFP_KERNEL);
+  struct priority_queue pqueue* = kmalloc(sizeof(struct priority_queue *),GFP_KERNEL);
   pqueue->size = 0;
   pqueue->max_size = 6;
   pqueue->requests = kmalloc_array(6, sizeof(struct k_list *),GFP_KERNEL);
