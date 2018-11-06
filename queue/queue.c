@@ -51,6 +51,8 @@ ssize_t dequeue(struct file *filp,char *buf,size_t count,loff_t *offp){
     msg=node->data;
     ret=strlen(msg);//return the data from the node
     new_node=0;
+	kfree(msg);
+	kfree(node);
   }
   if(count>ret) {
     count=ret;
@@ -96,8 +98,16 @@ int queue_init (void) {
 }
 //delete everything
 void queue_cleanup(void) {
+
+//free any remaining nodes on the queue
+
+
+
+ kfree(head);
  remove_proc_entry("queue",NULL);
  printk("cleanin' queue");
+
+ // add code to free thigns in case they are not empty
 }
 
 module_init(queue_init);

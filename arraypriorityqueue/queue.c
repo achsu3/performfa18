@@ -5,13 +5,13 @@
 #include <asm/uaccess.h>
 #include <linux/slab.h>
 #include <linux/syscalls.h>
-
+//use this https://people.freedesktop.org/~narmstrong/meson_drm_doc/dev-tools/gdb-kernel-debugging.html 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("AMANDA");
 MODULE_DESCRIPTION("");
 MODULE_VERSION(".01");
 
-
+int _weight = 13;//assigned and incremented for testing purposes
 int len,temp,i=0,ret;
 char *empty="Queue Empty  \n";
 int emp_len,flag=1;
@@ -30,7 +30,7 @@ struct priority_queue{
   int size;//current size
   int max_size;//drop if this is reached
   struct k_list * requests; //array of requeusts in queue
-  unsigned de_i; //index to dequeue from
+ // unsigned de_i; //index to dequeue from
 };
 struct k_list {
   char *data;//hold data
@@ -108,34 +108,31 @@ ssize_t dequeue(struct file *filp,char *buf,size_t count,loff_t *offp){
     //list_del(&node->queue_list);//delete the node youre dequeueing
     new_node=1;//there are more nodes to dequeue
   }
-  if(de){
-    //shift everything up 1
-    int i = 0;
-    while(i<(pqueue->size-2)) {
-	    pqueue->requests[i].data = pqueue->requests[i+1].data;
-	    pqueue->requests[i].weight = pqueue->requests[i+1].weight;
-    }
-  }
-  //make the last one null
-  pqueue->requests[pqueue->size-1].data = NULL;
-  pqueue->requests[pqueue->size-1].weight = 0;
-
+  //re-heapify the queue
+  //first put the last one in the first one's spot
+  heap_swap(0,pqueue->size-1);
   //decrement size of pqueue
   pqueue->size = pqueue->size -1;
+  //call the heapify function
+  max_heapify();
   return count;
 }
 
 //enqueue
 ssize_t enqueue(struct file *filp,const char *buf,size_t count,loff_t *offp){
-  msg=kmalloc(10*sizeof(char),GFP_KERNEL);
-  temp=copy_from_user(msg,buf,count);
-  struct k_list * newnode=kmalloc(sizeof(struct k_list),GFP_KERNEL);
-  newnode->data=msg;
-  newnode->weight = 6;//testing purposes
   if(pqueue->size == pqueue->max_size){//if it is full
     return count;
   }
-  pqueue->requests[pqueue->size]=node;
+  msg=kmalloc(10*sizeof(char),GFP_KERNEL);
+  temp=copy_from_user(msg,buf,count);
+  pqueue->requests[pqueue->size].data=msg;
+  pqueue->requests[pqueue->size].weight = _weight;
+  _weight ++;
+  //struct k_list * newnode= //no need to malloc for this again kmalloc(sizeof(struct k_list),GFP_KERNEL);
+  //newnode->data=msg;
+  //newnode->weight = _weight;//testing purposes
+  //pqueue->requests[pqueue->size]=node;
+
   pqueue->size = pqueue->size +1;
   max_heapify();
   return count;
@@ -166,7 +163,7 @@ int queue_init (void) {
 void queue_cleanup(void) {
  remove_proc_entry("queue",NULL);
  kfree(pqueue->requests);
- //kfree(pqueue); - why doesn't this work? 
+ kfree(pqueue);// - why doesn't this work? 
  printk("cleanin' queue");
 }
 
