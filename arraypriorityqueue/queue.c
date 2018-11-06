@@ -22,7 +22,7 @@ struct list_head *head;
 struct list_head test_head;
 int new_node=1;
 char *msg;
-struct priority_queue pqueue;
+static struct priority_queue *pqueue;
 
 //create queue struct
 struct priority_queue{
@@ -30,25 +30,26 @@ struct priority_queue{
   int size;//current size
   int max_size;//drop if this is reached
   struct k_list * requests; //array of requeusts in queue
-
+  unsigned de_i; //index to dequeue from
 };
 struct k_list {
   char *data;//hold data
   int weight;//
 };
 
-void heap_swap(struct priority_queue * pqueue, int i, int j){//swap two indexes in the requests array
+void heap_swap(int i, int j){//swap two indexes in the requests array
   //swap each item seperately
+  int tempweight;
   char * tempdata = pqueue->requests[i].data;
   pqueue->requests[i].data = pqueue->requests[j].data;
   pqueue->requests[j].data = tempdata;
 
-  int tempweight = pqueue->requests[i].weight;
+  tempweight = pqueue->requests[i].weight;
   pqueue->requests[i].weight = pqueue->requests[j].weight;
   pqueue->requests[j].weight = tempweight;
 }
 
-void max_heapify(struct priority_queue * pqueue){
+void max_heapify(void){
   int i = 1;
   int l,r;
   int largest = 0;
@@ -67,14 +68,14 @@ void max_heapify(struct priority_queue * pqueue){
     if(largest == i){
       return;
     }
-    heap_swap(pqueue,i-1,largest);
+    heap_swap(i-1,largest);
     i = largest + 1;
   }
 }
 
 
 //dequeue
-ssize_t dequeue(struct priority_queue * pqueue,struct file *filp,char *buf,size_t count,loff_t *offp){
+ssize_t dequeue(struct file *filp,char *buf,size_t count,loff_t *offp){
   if(pqueue->size == 0){//make sure the list isn't empry before you try popping
     msg=empty;
     if(flag==1) {//the first time you dequeue and it's empty - return 1
@@ -110,9 +111,10 @@ ssize_t dequeue(struct priority_queue * pqueue,struct file *filp,char *buf,size_
   if(de){
     //shift everything up 1
     int i = 0;
-    while(i<(pqueue->size-2))
-      pqueue->requests[i].data = pqueue->requests[i+1].data;
-      pqueue->requests[i].weight = pqueue->requests[i+1].weight;
+    while(i<(pqueue->size-2)) {
+	    pqueue->requests[i].data = pqueue->requests[i+1].data;
+	    pqueue->requests[i].weight = pqueue->requests[i+1].weight;
+    }
   }
   //make the last one null
   pqueue->requests[pqueue->size-1].data = NULL;
@@ -124,10 +126,10 @@ ssize_t dequeue(struct priority_queue * pqueue,struct file *filp,char *buf,size_
 }
 
 //enqueue
-ssize_t enqueue(struct priority_queue* pqueue, struct file *filp,const char *buf,size_t count,loff_t *offp){
+ssize_t enqueue(struct file *filp,const char *buf,size_t count,loff_t *offp){
   msg=kmalloc(10*sizeof(char),GFP_KERNEL);
   temp=copy_from_user(msg,buf,count);
-  struct k_list * newnode=kmalloc(sizeof(struct k_list *),GFP_KERNEL);
+  struct k_list * newnode=kmalloc(sizeof(struct k_list),GFP_KERNEL);
   newnode->data=msg;
   newnode->weight = 6;//testing purposes
   if(pqueue->size == pqueue->max_size){//if it is full
@@ -135,7 +137,7 @@ ssize_t enqueue(struct priority_queue* pqueue, struct file *filp,const char *buf
   }
   pqueue->requests[pqueue->size]=node;
   pqueue->size = pqueue->size +1;
-  max_heapify(pqueue);
+  max_heapify();
   return count;
 }
 
@@ -152,10 +154,10 @@ void create_new_proc_entry(void){
 //initialize the queue!
 int queue_init (void) {
   create_new_proc_entry();
-  struct priority_queue* pqueue = kmalloc(sizeof(struct priority_queue *),GFP_KERNEL);
+  pqueue = kmalloc(sizeof(struct priority_queue),GFP_KERNEL);
   pqueue->size = 0;
   pqueue->max_size = 6;
-  pqueue->requests = kmalloc_array(6, sizeof(struct k_list *),GFP_KERNEL);
+  pqueue->requests = kmalloc_array(6, sizeof(struct k_list),GFP_KERNEL);
   emp_len=strlen(empty);
   printk("init queue");
   return 0;
@@ -163,7 +165,7 @@ int queue_init (void) {
 //delete everything
 void queue_cleanup(void) {
  remove_proc_entry("queue",NULL);
- kfree(pqueue.requests);
+ kfree(pqueue->requests);
  //kfree(pqueue); - why doesn't this work? 
  printk("cleanin' queue");
 }
