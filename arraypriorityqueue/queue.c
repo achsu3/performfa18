@@ -76,6 +76,7 @@ void max_heapify(void){
 
 //dequeue
 ssize_t dequeue(struct file *filp,char *buf,size_t count,loff_t *offp){
+  int de=0;
   if(pqueue->size == 0){//make sure the list isn't empry before you try popping
     msg=empty;
     if(flag==1) {//the first time you dequeue and it's empty - return 1
@@ -90,14 +91,13 @@ ssize_t dequeue(struct file *filp,char *buf,size_t count,loff_t *offp){
     printk(KERN_INFO "\nQ empty\n");
     return ret;
   }
-  bool de = false;
+  de = 0;
   if(new_node == 1) {//you have a node to dequeue
     node=pqueue->requests[1];
     msg=node.data;
     ret=strlen(msg);//return the data from the node
     new_node=0;
-    de = true;
-  }
+    de = 1;
   if(count>ret) {
     count=ret;
   }
@@ -115,6 +115,8 @@ ssize_t dequeue(struct file *filp,char *buf,size_t count,loff_t *offp){
   pqueue->size = pqueue->size -1;
   //call the heapify function
   max_heapify();
+  //return count;
+  }
   return count;
 }
 
@@ -161,9 +163,9 @@ int queue_init (void) {
 }
 //delete everything
 void queue_cleanup(void) {
- remove_proc_entry("queue",NULL);
  kfree(pqueue->requests);
  kfree(pqueue);// - why doesn't this work? 
+ remove_proc_entry("queue",NULL);
  printk("cleanin' queue");
 }
 
