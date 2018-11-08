@@ -54,6 +54,7 @@ void max_heapify(void){
   int l,r;
   int largest = 0;
   while(true){
+    largest = i;
     l = 2i-1;
     r = 2i;
     if((l<=pqueue->size-1) && pqueue->requests[l].weight>pqueue->requests[r].weight){
