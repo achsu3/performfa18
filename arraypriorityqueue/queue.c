@@ -157,6 +157,11 @@ int queue_init (void) {
   pqueue->size = 0;
   pqueue->max_size = 6;
   pqueue->requests = kmalloc_array(6, sizeof(struct k_list),GFP_KERNEL);
+  //initialize all of the requests to have values so that max_heapify works
+  for(unsigned q = 0; q<6; q++){
+  	pqueue->requests[q].data = NULL;
+	pqueue->requests[q].weight = -1;
+  }
   emp_len=strlen(empty);
   printk("init queue");
   return 0;
