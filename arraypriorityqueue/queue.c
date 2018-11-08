@@ -26,155 +26,194 @@ static struct priority_queue *pqueue;
 
 //create queue struct
 struct priority_queue{
-  //array of reqs
-  int size;//current size
-  int max_size;//drop if this is reached
-  struct k_list * requests; //array of requeusts in queue
- // unsigned de_i; //index to dequeue from
+	//array of reqs
+	int size;//current size
+	int max_size;//drop if this is reached
+	struct k_list * requests; //array of requeusts in queue
+	// unsigned de_i; //index to dequeue from
 };
 struct k_list {
-  char *data;//hold data
-  int weight;//
+	char *data;//hold data
+	int weight;//
 };
 
 void heap_swap(int i, int j){//swap two indexes in the requests array
-  //swap each item seperately
-  int tempweight;
-  char * tempdata = pqueue->requests[i].data;
-  pqueue->requests[i].data = pqueue->requests[j].data;
-  pqueue->requests[j].data = tempdata;
+	//swap each item seperately
+	int tempweight;
+	char * tempdata = pqueue->requests[i].data;
+	pqueue->requests[i].data = pqueue->requests[j].data;
+	pqueue->requests[j].data = tempdata;
 
-  tempweight = pqueue->requests[i].weight;
-  pqueue->requests[i].weight = pqueue->requests[j].weight;
-  pqueue->requests[j].weight = tempweight;
+	tempweight = pqueue->requests[i].weight;
+	pqueue->requests[i].weight = pqueue->requests[j].weight;
+	pqueue->requests[j].weight = tempweight;
 }
 
-void max_heapify(void){
-  int i = 1;
-  int l,r;
-  int largest = 0;
-  while(true){
-    largest = i;
-    l = 2i-1;
-    r = 2i;
-    if((l<=pqueue->size-1) && pqueue->requests[l].weight>pqueue->requests[r].weight){
-      largest = l;
-    }
-    else{
-      largest = i-1;
-    }
-    if((r<=pqueue->size-1)&&pqueue->requests[r].weight>pqueue->requests[l].weight){
-      largest = r;
-    }
-    if(largest == i){
-      return;
-    }
-    heap_swap(i-1,largest);
-    i = largest + 1;
-  }
+static inline void
+max_heapify(void){
+	int i = 1;
+	int l,r;
+	int largest = 0;
+
+	if (pqueue->size <= 1)
+		return;
+
+	while(true){
+		/* @FIXME: this is going into an infinite loop */
+		largest = i;
+		// l = 2i-1;
+		// r = 2i;
+		l = 2*i;
+		r = 2*i + 1;
+		pr_info("%s: largest = %d, l = %d, r = %d, size = %d\n",
+			__func__, largest, l, r, pqueue->size);
+		if((l<=pqueue->size-1) && pqueue->requests[l].weight>pqueue->requests[r].weight){
+			largest = l;
+		}
+		else{
+			largest = i;
+		}
+		if((r<=pqueue->size-1)&&pqueue->requests[r].weight>pqueue->requests[l].weight){
+			largest = r;
+		}
+		if(largest == i){
+			return;
+		}
+		heap_swap(i-1,largest);
+		i = largest + 1;
+	}
 }
 
 
 //dequeue
 ssize_t dequeue(struct file *filp,char *buf,size_t count,loff_t *offp){
-  int de=0;
-  if(pqueue->size == 0){//make sure the list isn't empry before you try popping
-    msg=empty;
-    if(flag==1) {//the first time you dequeue and it's empty - return 1
-      ret=emp_len;
-      flag=0;
-    }
-    else if(flag==0){//the second time just return 0
-      ret=0;
-      flag=1;
-    }
-    temp=copy_to_user(buf,msg, count);//temp holds # bytes that could not be copied
-    printk(KERN_INFO "\nQ empty\n");
-    return ret;
-  }
-  de = 0;
-  if(new_node == 1) {//you have a node to dequeue
-    node=pqueue->requests[1];
-    msg=node.data;
-    ret=strlen(msg);//return the data from the node
-    new_node=0;
-    de = 1;
-  if(count>ret) {
-    count=ret;
-  }
-  ret=ret-count;
-  temp=copy_to_user(buf,msg, count);
-  printk(KERN_INFO "\n data = %s \n" ,msg);
-  if(count==0) {
-    //list_del(&node->queue_list);//delete the node youre dequeueing
-    new_node=1;//there are more nodes to dequeue
-  }
-  //re-heapify the queue
-  //first put the last one in the first one's spot
-  heap_swap(0,pqueue->size-1);
-  //decrement size of pqueue
-  pqueue->size = pqueue->size -1;
-  //call the heapify function
-  max_heapify();
-  //return count;
-  }
-  return count;
+	int de=0;
+
+	if (*offp > 0)
+		return 0;
+
+	if(pqueue->size == 0){//make sure the list isn't empry before you try popping
+		msg=empty;
+		if(flag==1) {//the first time you dequeue and it's empty - return 1
+			ret=emp_len;
+			flag=0;
+		}
+		else if(flag==0){//the second time just return 0
+			ret=0;
+			flag=1;
+		}
+		temp=copy_to_user(buf,msg, count);//temp holds # bytes that could not be copied
+		printk(KERN_INFO "\nQ empty\n");
+		return ret;
+	}
+	de = 0;
+	pr_info("Checking new node\n");
+	pr_info("New node check passed!\n");
+	node=pqueue->requests[1];
+	msg=node.data;
+	ret=strlen(msg);//return the data from the node
+	new_node=0;
+	de = 1;
+	if(count>ret) {
+		count=ret;
+	}
+	ret=ret-count;
+	temp=copy_to_user(buf,msg, count);
+	printk(KERN_INFO "\n data = %s \n" ,msg);
+	if(count==0) {
+		//list_del(&node->queue_list);//delete the node youre dequeueing
+		new_node=1;//there are more nodes to dequeue
+	}
+	//re-heapify the queue
+	//first put the last one in the first one's spot
+	heap_swap(0,pqueue->size-1);
+	//decrement size of pqueue
+	pqueue->size = pqueue->size -1;
+	//call the heapify function
+	max_heapify();
+	//return count;
+	//
+	*offp += count;
+	return count;
 }
 
 //enqueue
 ssize_t enqueue(struct file *filp,const char *buf,size_t count,loff_t *offp){
-  if(pqueue->size == pqueue->max_size){//if it is full
-    return count;
-  }
-  msg=kmalloc(10*sizeof(char),GFP_KERNEL);
-  temp=copy_from_user(msg,buf,count);
-  pqueue->requests[pqueue->size].data=msg;
-  pqueue->requests[pqueue->size].weight = _weight;
-  _weight ++;
-  //struct k_list * newnode= //no need to malloc for this again kmalloc(sizeof(struct k_list),GFP_KERNEL);
-  //newnode->data=msg;
-  //newnode->weight = _weight;//testing purposes
-  //pqueue->requests[pqueue->size]=node;
+	if(pqueue->size == pqueue->max_size){//if it is full
+		pr_info("Queue is full\n");
+		return count;
+	}
+	msg=kmalloc(10*sizeof(char),GFP_KERNEL);
+	temp=copy_from_user(msg,buf,count);
+	msg[count] = '\0';
+	/* @FIXME: where do you want to insert? */
+	pqueue->requests[++(pqueue->size)].data=msg;
+	pqueue->requests[pqueue->size].weight = _weight;
+	_weight ++;
+	//struct k_list * newnode= //no need to malloc for this again kmalloc(sizeof(struct k_list),GFP_KERNEL);
+	//newnode->data=msg;
+	//newnode->weight = _weight;//testing purposes
+	//pqueue->requests[pqueue->size]=node;
 
-  pqueue->size = pqueue->size +1;
-  max_heapify();
-  return count;
+	// pqueue->size = pqueue->size +1;
+	max_heapify();
+	return count;
 }
 
 //file ops for the proc entry
 struct file_operations proc_fops = {
-  .read = dequeue,
-  .write = enqueue,
+	.read = dequeue,
+	.write = enqueue,
 };
 
 //create new proc
 void create_new_proc_entry(void){
-  proc_create("queue",0,NULL,&proc_fops);
+	proc_create("queue",0666,NULL,&proc_fops);
 }
 //initialize the queue!
 int queue_init (void) {
-  unsigned q = 0;
-  create_new_proc_entry();
-  pqueue = kmalloc(sizeof(struct priority_queue),GFP_KERNEL);
-  pqueue->size = 0;
-  pqueue->max_size = 6;
-  pqueue->requests = kmalloc_array(6, sizeof(struct k_list),GFP_KERNEL);
-  //initialize all of the requests to have values so that max_heapify works
-  q = 0;
-  while(q<6){
-  	pqueue->requests[q].data = NULL;
-	pqueue->requests[q].weight = -1;
-  }
-  emp_len=strlen(empty);
-  printk("init queue");
-  return 0;
+	unsigned q = 0;
+	create_new_proc_entry();
+	pqueue = kmalloc(sizeof(struct priority_queue),GFP_KERNEL);
+	pqueue->size = 0;
+	pqueue->max_size = 6;
+	pqueue->requests = kcalloc(6, sizeof(struct k_list),GFP_KERNEL);
+	//initialize all of the requests to have values so that max_heapify works
+	q = 0;
+	while(q<6){
+		pqueue->requests[q].data = NULL;
+		pqueue->requests[q].weight = -1;
+
+		/* @FIXME: There was an infinite loop here, you forgot to
+		 * increment q
+		 */
+		q++;
+	}
+	emp_len=strlen(empty);
+	printk("init queue");
+	return 0;
 }
+
+static inline void
+cleanup_queue(void)
+{
+	int i;
+	if (pqueue && pqueue->size > 0) {
+		for (i = 0;i < pqueue->size; ++i) {
+			if (pqueue->requests[i].data)
+				kfree(pqueue->requests[i].data);
+		}
+
+		kfree(pqueue->requests);
+		kfree(pqueue);
+	}
+}
+
 //delete everything
 void queue_cleanup(void) {
- kfree(pqueue->requests);
- kfree(pqueue);// - why doesn't this work? 
- remove_proc_entry("queue",NULL);
- printk("cleanin' queue");
+	cleanup_queue();
+	remove_proc_entry("queue",NULL);
+	printk("cleanin' queue");
 }
 
 module_init(queue_init);
