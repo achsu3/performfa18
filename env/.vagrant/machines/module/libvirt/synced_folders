@@ -1,1 +1,1 @@
-{"rsync":{"/vagrant":{"disabled":false,"guestpath":"/vagrant","hostpath":"/home/fenrir/git/performfa18/arraypriorityqueue","type":"rsync","rsync__auto":true,"__vagrantfile":true,"auto":true,"owner":"vagrant","group":"vagrant"}}}
+{"rsync":{"/vagrant":{"type":"rsync","rsync__auto":true,"guestpath":"/vagrant","hostpath":"/home/achsu3/performfa18/arraypriorityqueue","disabled":false,"__vagrantfile":true,"auto":true,"owner":"vagrant","group":"vagrant"}}}
