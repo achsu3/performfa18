@@ -39,6 +39,8 @@ struct k_list {
 
 void heap_swap(int i, int j){//swap two indexes in the requests array
 	//swap each item seperately
+	if(i==j)
+		return;
 	int tempweight;
 	char * tempdata = pqueue->requests[i].data;
 	pqueue->requests[i].data = pqueue->requests[j].data;
@@ -118,6 +120,7 @@ ssize_t dequeue(struct file *filp,char *buf,size_t count,loff_t *offp){
 	if(count==0) {
 		new_node=1;//there are more nodes to dequeue
 	}
+	pr_info("data: %s weight: %d", pqueue->requests[1].data, pqueue->requests[1].weight);
 	//re-heapify the queue
 	pqueue->requests[1].data ="NULL";
 	pqueue->requests[1].weight = -1;
@@ -125,17 +128,18 @@ ssize_t dequeue(struct file *filp,char *buf,size_t count,loff_t *offp){
 	heap_swap(1,pqueue->size);
 	pqueue->size = pqueue->size-1;
 	//call the heapify function
-	if(pqueue->size!=0){
+	if(pqueue->size!=0&&pqueue->size!=1){
 		max_heapify();
 	}
 	//return count;
 	*offp += count;
+	pr_info("pqueue size: %d",pqueue->size);
 	return count;
 }
 
 //enqueue
 ssize_t enqueue(struct file *filp,const char *buf,size_t count,loff_t *offp){
-	if(pqueue->size == pqueue->max_size){//if it is full
+	if(pqueue->size >= pqueue->max_size){//if it is full
 		pr_info("Queue is full\n");
 		return count;
 	}
@@ -171,7 +175,7 @@ int queue_init (void) {
 	pqueue->requests = kcalloc(6, sizeof(struct k_list),GFP_KERNEL);
 	//initialize all of the requests to have values so that max_heapify works
 	q = 0;
-	while(q<6){
+	while(q<=6){
 		pqueue->requests[q].data = NULL;
 		pqueue->requests[q].weight = -1;
 		q++;
