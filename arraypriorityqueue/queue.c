@@ -67,14 +67,18 @@ max_heapify(void){
 		r = 2*i + 1;
 		pr_info("%s: largest = %d, l = %d, r = %d, size = %d\n",
 			__func__, largest, l, r, pqueue->size);
-		if((l<=pqueue->size) && pqueue->requests[l].weight>pqueue->requests[r].weight){
-			largest = l;
+		if(l<=pqueue->size){
+				if(pqueue->requests[l].weight>pqueue->requests[r].weight){
+					largest = l;
+			}
 		}
-		if((r<=pqueue->size)&&pqueue->requests[r].weight>pqueue->requests[l].weight){
-			largest = r;
+		if(r<=pqueue->size){
+			if(pqueue->requests[r].weight>pqueue->requests[l].weight){
+				largest = r;
+			}
 		}
 		if(largest == i){
-			pr_info("finished heapify, root: %s", pqueue->requests[1].data);
+			pr_info("finished heapify, root data: %s", pqueue->requests[1].data);
 			return;
 		}
 		heap_swap(i,largest);
@@ -122,8 +126,8 @@ ssize_t dequeue(struct file *filp,char *buf,size_t count,loff_t *offp){
 	}
 	pr_info("data: %s weight: %d", pqueue->requests[1].data, pqueue->requests[1].weight);
 	//re-heapify the queue
-	pqueue->requests[1].data ="NULL";
-	pqueue->requests[1].weight = -1;
+	//pqueue->requests[1].data ="NULL";
+	//pqueue->requests[1].weight = -1;
 	//first put the last one in the first one's spot
 	heap_swap(1,pqueue->size);
 	pqueue->size = pqueue->size-1;
