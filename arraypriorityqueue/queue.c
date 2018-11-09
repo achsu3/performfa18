@@ -125,7 +125,9 @@ ssize_t dequeue(struct file *filp,char *buf,size_t count,loff_t *offp){
 	heap_swap(1,pqueue->size);
 	pqueue->size = pqueue->size-1;
 	//call the heapify function
-	max_heapify();
+	if(pqueue->size!=0){
+		max_heapify();
+	}
 	//return count;
 	*offp += count;
 	return count;
