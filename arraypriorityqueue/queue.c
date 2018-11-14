@@ -61,19 +61,18 @@ max_heapify(void){
 		return;
 
 	while(true){
-		/* @FIXME: this is going into an infinite loop */
 		largest = i;
 		l = 2*i;
 		r = 2*i + 1;
 		pr_info("%s: largest = %d, l = %d, r = %d, size = %d\n",
 			__func__, largest, l, r, pqueue->size);
-		if(l<=pqueue->size){
-				if(pqueue->requests[l].weight>pqueue->requests[r].weight){
-					largest = l;
+		if(l<pqueue->size){
+			if(pqueue->requests[l].weight > pqueue->requests[largest].weight){
+				largest = l;
 			}
 		}
-		if(r<=pqueue->size){
-			if(pqueue->requests[r].weight>pqueue->requests[l].weight){
+		if(r< pqueue->size){
+			if(pqueue->requests[r].weight > pqueue->requests[largest].weight){
 				largest = r;
 			}
 		}
@@ -82,9 +81,29 @@ max_heapify(void){
 			return;
 		}
 		heap_swap(i,largest);
-		i = largest + 1;
+		i = largest;
 		pr_info("end of loop - largest: %d",largest);
 	}
+}
+
+void heapify_up(int i){
+	int index = i;
+	int parent = 0;
+	if(index > 1){
+		while(true){
+			pr_info("heapify_up index: %d", index);
+			parent = index/2;	
+			if(parent<1){
+				pr_info("exiting heapify_up");
+				return;
+			}
+			else if(pqueue->requests[index].weight> pqueue->requests[parent].weight){
+				pr_info("swapping %d and %d", index, parent);
+				heap_swap(index,parent);
+			}
+			index = parent;
+	}}
+	
 }
 
 //dequeue
@@ -93,7 +112,7 @@ ssize_t dequeue(struct file *filp,char *buf,size_t count,loff_t *offp){
 	if (*offp > 0){
 		return 0;
 	}
-	if(pqueue->size == 0){//make sure the list isn't empry before you try popping
+	if(pqueue->size == 1){//make sure the list isn't empry before you try popping
 		msg=empty;
 		if(flag==1) {//the first time you dequeue and it's empty - return 1
 			ret=emp_len;
@@ -126,8 +145,6 @@ ssize_t dequeue(struct file *filp,char *buf,size_t count,loff_t *offp){
 	}
 	pr_info("data: %s weight: %d", pqueue->requests[1].data, pqueue->requests[1].weight);
 	//re-heapify the queue
-	//pqueue->requests[1].data ="NULL";
-	//pqueue->requests[1].weight = -1;
 	//first put the last one in the first one's spot
 	heap_swap(1,pqueue->size);
 	pqueue->size = pqueue->size-1;
@@ -147,15 +164,22 @@ ssize_t enqueue(struct file *filp,const char *buf,size_t count,loff_t *offp){
 		pr_info("Queue is full\n");
 		return count;
 	}
+	pr_info("Not full\n");
 	msg=kmalloc(10*sizeof(char),GFP_KERNEL);
 	temp=copy_from_user(msg,buf,count);
 	msg[count] = '\0';
-	/* @FIXME: where do you want to insert? */
 	pqueue->requests[(pqueue->size)].data=msg;
 	pqueue->requests[pqueue->size].weight = _weight;
+	pr_info("enqueuing msg: %s weight: %d",msg, _weight);
 	(pqueue->size)++;
 	_weight ++;
-	max_heapify();
+	pr_info("array this far: ");
+	unsigned i = 0;
+	while(i< pqueue->size){
+		pr_info("index: %d data: %s", i, pqueue->requests[i].data);
+		i++;
+	}
+	heapify_up(pqueue->size-1);
 	return count;
 }
 
@@ -174,12 +198,12 @@ int queue_init (void) {
 	unsigned q = 0;
 	create_new_proc_entry();
 	pqueue = kmalloc(sizeof(struct priority_queue),GFP_KERNEL);
-	pqueue->size = 0;
-	pqueue->max_size = 6;
-	pqueue->requests = kcalloc(6, sizeof(struct k_list),GFP_KERNEL);
+	pqueue->size = 1;
+	pqueue->max_size = 8;
+	pqueue->requests = kcalloc(pqueue->max_size, sizeof(struct k_list),GFP_KERNEL);
 	//initialize all of the requests to have values so that max_heapify works
 	q = 0;
-	while(q<=6){
+	while(q<=pqueue->max_size){
 		pqueue->requests[q].data = NULL;
 		pqueue->requests[q].weight = -1;
 		q++;
