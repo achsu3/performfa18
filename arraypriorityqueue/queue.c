@@ -55,12 +55,12 @@ static inline void
 max_heapify(void){
 	int i = 1;
 	int l,r;
-	int largest = 0;
+	int largest = 1;
 
 	if (pqueue->size <= 1)
 		return;
-
-	while(true){
+	
+	while(i< pqueue->size){
 		largest = i;
 		l = 2*i;
 		r = 2*i + 1;
@@ -68,11 +68,13 @@ max_heapify(void){
 			__func__, largest, l, r, pqueue->size);
 		if(l<pqueue->size){
 			if(pqueue->requests[l].weight > pqueue->requests[largest].weight){
+				pr_info("largest index is l: %d",l );
 				largest = l;
 			}
 		}
 		if(r< pqueue->size){
 			if(pqueue->requests[r].weight > pqueue->requests[largest].weight){
+				pr_info("largest index is r: %d",r);
 				largest = r;
 			}
 		}
@@ -82,7 +84,13 @@ max_heapify(void){
 		}
 		heap_swap(i,largest);
 		i = largest;
-		pr_info("end of loop - largest: %d",largest);
+		pr_info("end of loop - largest is at index: %d",largest);
+		pr_info("array after this iteration: ");
+		unsigned i = 0;
+		while(i<pqueue->size){
+			pr_info("index: %d data: %s", i, pqueue->requests[i].data);
+			i++;
+		}
 	}
 }
 
@@ -155,6 +163,12 @@ ssize_t dequeue(struct file *filp,char *buf,size_t count,loff_t *offp){
 	//return count;
 	*offp += count;
 	pr_info("pqueue size: %d",pqueue->size);
+	pr_info("array now: ");
+	unsigned i = 0;
+	while (i< pqueue->size){
+		pr_info("index: %d data: %s",i,pqueue->requests[i].data);
+		i++;
+	}
 	return count;
 }
 
@@ -173,13 +187,14 @@ ssize_t enqueue(struct file *filp,const char *buf,size_t count,loff_t *offp){
 	pr_info("enqueuing msg: %s weight: %d",msg, _weight);
 	(pqueue->size)++;
 	_weight ++;
-	pr_info("array this far: ");
+	heapify_up(pqueue->size-1);
+	pr_info("array after enqueue: ");
 	unsigned i = 0;
 	while(i< pqueue->size){
 		pr_info("index: %d data: %s", i, pqueue->requests[i].data);
 		i++;
 	}
-	heapify_up(pqueue->size-1);
+	//heapify_up(pqueue->size-1);
 	return count;
 }
 
