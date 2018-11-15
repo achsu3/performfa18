@@ -82,7 +82,9 @@ max_heapify(void){
 			pr_info("finished heapify, root data: %s", pqueue->requests[1].data);
 			return;
 		}
+		pr_info("before swap: index i: %d has data: %s index largest: %d has data: %s",i,pqueue->requests[i].data, largest, pqueue->requests[largest].data);
 		heap_swap(i,largest);
+		pr_info("after swap: index i: %d has data: %s index largest: %d has data: %s",i,pqueue->requests[i].data, largest, pqueue->requests[largest].data);
 		i = largest;
 		pr_info("end of loop - largest is at index: %d",largest);
 		pr_info("array after this iteration: ");
@@ -154,7 +156,7 @@ ssize_t dequeue(struct file *filp,char *buf,size_t count,loff_t *offp){
 	pr_info("data: %s weight: %d", pqueue->requests[1].data, pqueue->requests[1].weight);
 	//re-heapify the queue
 	//first put the last one in the first one's spot
-	heap_swap(1,pqueue->size);
+	heap_swap(1,pqueue->size-1);
 	pqueue->size = pqueue->size-1;
 	//call the heapify function
 	if(pqueue->size!=0&&pqueue->size!=1){
@@ -186,7 +188,7 @@ ssize_t enqueue(struct file *filp,const char *buf,size_t count,loff_t *offp){
 	pqueue->requests[pqueue->size].weight = _weight;
 	pr_info("enqueuing msg: %s weight: %d",msg, _weight);
 	(pqueue->size)++;
-	_weight ++;
+	_weight --;
 	heapify_up(pqueue->size-1);
 	pr_info("array after enqueue: ");
 	unsigned i = 0;
